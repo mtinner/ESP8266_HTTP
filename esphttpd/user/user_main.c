@@ -19,25 +19,9 @@
 #include "cgi.h"
 #include "cgiwifi.h"
 #include "stdout.h"
-#include "auth.h"
 #include "wifi.h"
 
-//Function that tells the authentication system what users/passwords live on the system.
-//This is disabled in the default build; if you want to try it, enable the authBasic line in
-//the builtInUrls below.
-int myPassFn(HttpdConnData *connData, int no, char *user, int userLen, char *pass, int passLen) {
-	if (no==0) {
-		os_strcpy(user, "admin");
-		os_strcpy(pass, "s3cr3t");
-		return 1;
-//Add more users this way. Check against incrementing no for each user added.
-//	} else if (no==1) {
-//		os_strcpy(user, "user1");
-//		os_strcpy(pass, "something");
-//		return 1;
-	}
-	return 0;
-}
+
 
 
 /*
