@@ -17,9 +17,7 @@
 #include "io.h"
 #include "httpdespfs.h"
 #include "cgi.h"
-#include "cgiwifi.h"
 #include "stdout.h"
-#include "wifi.h"
 
 
 
@@ -42,17 +40,6 @@ HttpdBuiltInUrl builtInUrls[]={
 	{"/led.cgi", cgiLed, NULL},
 	{"/updateweb.cgi", cgiUploadEspfs, NULL},
 
-	//Routines to make the /wifi URL and everything beneath it work.
-
-//Enable the line below to protect the WiFi configuration with an username/password combo.
-//	{"/wifi/*", authBasic, myPassFn},
-
-	{"/wifi", cgiRedirect, "/wifi/wifi.tpl"},
-	{"/wifi/", cgiRedirect, "/wifi/wifi.tpl"},
-	{"/wifi/wifiscan.cgi", cgiWiFiScan, NULL},
-	{"/wifi/wifi.tpl", cgiEspFsTemplate, tplWlan},
-	{"/wifi/connect.cgi", cgiWiFiConnect, NULL},
-	{"/wifi/setmode.cgi", cgiWifiSetMode, NULL},
 
 	{"*", cgiEspFsHook, NULL}, //Catch-all cgi function for the filesystem
 	{NULL, NULL, NULL}
@@ -63,7 +50,6 @@ HttpdBuiltInUrl builtInUrls[]={
 void user_init(void) {
 	stdoutInit();
 	ioInit();
-	wifiInit();
 	httpdInit(builtInUrls, 80);
 	os_printf("\nReady\n");
 }
