@@ -31,6 +31,15 @@ void ICACHE_FLASH_ATTR ioLed(int ena) {
 	}
 }
 
+void ICACHE_FLASH_ATTR setLed(int ena, int GPIO) {
+	//gpio_output_set is overkill. ToDo: use better mactos
+	if (ena) {
+		gpio_output_set((1<<GPIO), 0, (1<<GPIO), 0);
+	} else {
+		gpio_output_set(0, (1<<GPIO), (1<<GPIO), 0);
+	}
+}
+
 static void ICACHE_FLASH_ATTR resetBtnTimerCb(void *arg) {
 	static int resetCnt=0;
 	if (!GPIO_INPUT_GET(BTNGPIO)) {

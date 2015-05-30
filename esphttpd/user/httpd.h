@@ -56,6 +56,7 @@ int ICACHE_FLASH_ATTR cgiRedirect(HttpdConnData *connData);
 void ICACHE_FLASH_ATTR httpdRedirect(HttpdConnData *conn, char *newUrl);
 int httpdUrlDecode(char *val, int valLen, char *ret, int retLen);
 int ICACHE_FLASH_ATTR httpdFindArg(char *line, char *arg, char *buff, int buffLen);
+int ICACHE_FLASH_ATTR httpFindValueFromArg(char *line, char *arg, char *buff, int buffLen);
 void ICACHE_FLASH_ATTR httpdInit(HttpdBuiltInUrl *fixedUrls, int port);
 const char *httpdGetMimetype(char *url);
 void ICACHE_FLASH_ATTR httpdStartResponse(HttpdConnData *conn, int code);

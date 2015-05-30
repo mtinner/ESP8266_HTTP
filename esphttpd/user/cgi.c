@@ -50,7 +50,8 @@ int ICACHE_FLASH_ATTR cgiLed(HttpdConnData *connData) {
 
 //Cgi that turns the LED on or off according to the 'led' param in the POST data
 int ICACHE_FLASH_ATTR myFuncLED(HttpdConnData *connData) {
-	int len;
+	int led;
+	int status;
 	char buff[1024];
 
 	if (connData->conn==NULL) {
@@ -58,13 +59,18 @@ int ICACHE_FLASH_ATTR myFuncLED(HttpdConnData *connData) {
 		return HTTPD_CGI_DONE;
 	}
 
-	len=httpdFindArg(connData->post->buff, "led", buff, sizeof(buff));
-	if (len!=0) {
-		currLedState=atoi(buff);
-		ioLed(currLedState);
-	}
+	led=httpFindValueFromArg(connData->post->buff, "led", buff, sizeof(buff));
+	status=httpFindValueFromArg(connData->post->buff, "status", buff, sizeof(buff));
 
-	httpdSend(connData, "ledSet", 6);
+	os_printf("len: %s\n", connData->post->buff);
+	//os_printf("status: %d\n", status);
+
+
+	//if (led!=0) {
+		currLedState=atoi(buff);
+		setLed(status,led);
+	//}
+	httpdSend(connData, "LED_SET", 7);
 	//httpdRedirect(connData, "led.tpl");
 	return HTTPD_CGI_DONE;
 }
