@@ -175,38 +175,19 @@ int ICACHE_FLASH_ATTR httpdFindArg(char *line, char *arg, char *buff,
 	return -1; //not found
 }
 
-int ICACHE_FLASH_ATTR httpFindValueFromArg(char *line, char *arg, char *buff,
-		int buffLen) {
+int ICACHE_FLASH_ATTR httpFindValueFromArg(char *line, char *arg) {
 	if (strstr(line, arg)) {
 		char* occurrence = strstr(line, arg),*p=occurrence;
 		while (*p) {
 		        if (isdigit(*p)) {
 		            int val = strtol(p, &p, 10);
-		            os_printf("occ1: %d\n", val);
-
 		            return val;
-		           // printf("%ld\n", val);
 		        } else {
 		            p++;
 		        }
 		    }
 	}
-	// No int found
 	return -1;
-
-	/*if(strstr(line,arg))
-	 {
-	 os_printf("Arg: %s\n", arg);
-	 os_printf("lenOfArg: %d\n", strlen(arg));
-	 char* occurrence = strstr(line,arg);
-	 os_printf("occ1: %s\n", occurrence);
-	 occurrence=occurrence+strlen(arg)+1;
-	 os_printf("occ2: %s\n", occurrence);
-	 int value = *occurrence;
-	 os_printf("occ3: %d\n", value-48);
-	 return value-48;
-	 }
-	 return -1;*/
 }
 
 //Get the value of a certain header in the HTTP client head

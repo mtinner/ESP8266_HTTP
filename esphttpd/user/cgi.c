@@ -1,7 +1,7 @@
 /*
-Some random cgi routines. Used in the LED example and the page that returns the entire
-flash as a binary. Also handles the hit counter on the main page.
-*/
+ Some random cgi routines. Used in the LED example and the page that returns the entire
+ flash as a binary. Also handles the hit counter on the main page.
+ */
 
 /*
  * ----------------------------------------------------------------------------
@@ -12,8 +12,8 @@ flash as a binary. Also handles the hit counter on the main page.
  * ----------------------------------------------------------------------------
  */
 
-
 #include <string.h>
+#include <stdio.h>
 #include <osapi.h>
 #include "user_interface.h"
 #include "mem.h"
@@ -24,23 +24,22 @@ flash as a binary. Also handles the hit counter on the main page.
 #include "espmissingincludes.h"
 #include "../include/httpdconfig.h"
 
-
 //cause I can't be bothered to write an ioGetLed()
-static char currLedState=0;
+static char currLedState = 0;
 
 //Cgi that turns the LED on or off according to the 'led' param in the POST data
 int ICACHE_FLASH_ATTR cgiLed(HttpdConnData *connData) {
 	int len;
 	char buff[1024];
-	
-	if (connData->conn==NULL) {
+
+	if (connData->conn == NULL) {
 		//Connection aborted. Clean up.
 		return HTTPD_CGI_DONE;
 	}
 
-	len=httpdFindArg(connData->post->buff, "led", buff, sizeof(buff));
-	if (len!=0) {
-		currLedState=atoi(buff);
+	len = httpdFindArg(connData->post->buff, "led", buff, sizeof(buff));
+	if (len != 0) {
+		currLedState = atoi(buff);
 		ioLed(currLedState);
 	}
 
@@ -48,42 +47,65 @@ int ICACHE_FLASH_ATTR cgiLed(HttpdConnData *connData) {
 	return HTTPD_CGI_DONE;
 }
 
-//Cgi that turns the LED on or off according to the 'led' param in the POST data
-int ICACHE_FLASH_ATTR myFuncLED(HttpdConnData *connData) {
+void prepareToSetLed(HttpdConnData* connData) {
+	//POST
 	int led;
 	int status;
-	char buff[1024];
+	led = httpFindValueFromArg(connData->post->buff, "led");
+	status = httpFindValueFromArg(connData->post->buff, "status");
+	if (led != -1 && status != -1) {
+		setLed(status, led);
+	}
+	httpdSend(connData, "ok", 2);
+}
 
-	if (connData->conn==NULL) {
+//Cgi that turns the LED on or off according to the 'led' param in the POST data
+int ICACHE_FLASH_ATTR postLed(HttpdConnData *connData) {
+	if (connData->conn == NULL) {
 		//Connection aborted. Clean up.
 		return HTTPD_CGI_DONE;
 	}
 
-	led=httpFindValueFromArg(connData->post->buff, "led", buff, sizeof(buff));
-	status=httpFindValueFromArg(connData->post->buff, "status", buff, sizeof(buff));
-
-	os_printf("len: %s\n", connData->post->buff);
-	//os_printf("status: %d\n", status);
-
-
-	//if (led!=0) {
-		currLedState=atoi(buff);
-		setLed(status,led);
-	//}
-	httpdSend(connData, "LED_SET", 7);
-	//httpdRedirect(connData, "led.tpl");
+	if (connData->requestType == 2) { //POST
+		prepareToSetLed(connData);
+	}
 	return HTTPD_CGI_DONE;
 }
 
+int ICACHE_FLASH_ATTR getLed(HttpdConnData *connData) {
 
+	char buff[1024];
+
+	if (connData->conn == NULL) {
+		//Connection aborted. Clean up.
+		return HTTPD_CGI_DONE;
+	}
+
+	if (connData->requestType == 1) { //POST
+		int led;
+		os_printf("getled\n");
+		led=httpFindValueFromArg(connData->url, "led");
+		uint32 ledStatus = getLedStatus(led);
+		char buffer [50];
+
+		int size = os_sprintf(buffer,"{id: %lu, status: %d}",led,(unsigned long)ledStatus);
+		os_printf("{\"id\": %lu, \"status\": %d}",led,(unsigned long)ledStatus);
+		os_printf("\n");
+		httpdSend(connData, buffer, size);
+	}
+
+
+	return HTTPD_CGI_DONE;
+}
 
 //Template code for the led page.
 int ICACHE_FLASH_ATTR tplLed(HttpdConnData *connData, char *token, void **arg) {
 	char buff[128];
-	if (token==NULL) return HTTPD_CGI_DONE;
+	if (token == NULL)
+		return HTTPD_CGI_DONE;
 
 	os_strcpy(buff, "Unknown");
-	if (os_strcmp(token, "ledstate")==0) {
+	if (os_strcmp(token, "ledstate") == 0) {
 		if (currLedState) {
 			os_strcpy(buff, "on");
 		} else {
@@ -94,16 +116,16 @@ int ICACHE_FLASH_ATTR tplLed(HttpdConnData *connData, char *token, void **arg) {
 	return HTTPD_CGI_DONE;
 }
 
-
-
-static long hitCounter=0;
+static long hitCounter = 0;
 
 //Template code for the counter on the index page.
-int ICACHE_FLASH_ATTR tplCounter(HttpdConnData *connData, char *token, void **arg) {
+int ICACHE_FLASH_ATTR tplCounter(HttpdConnData *connData, char *token,
+		void **arg) {
 	char buff[128];
-	if (token==NULL) return HTTPD_CGI_DONE;
+	if (token == NULL)
+		return HTTPD_CGI_DONE;
 
-	if (os_strcmp(token, "counter")==0) {
+	if (os_strcmp(token, "counter") == 0) {
 		hitCounter++;
 		os_sprintf(buff, "%ld", hitCounter);
 	}
@@ -111,31 +133,33 @@ int ICACHE_FLASH_ATTR tplCounter(HttpdConnData *connData, char *token, void **ar
 	return HTTPD_CGI_DONE;
 }
 
-
 //Cgi that reads the SPI flash. Assumes 512KByte flash.
 int ICACHE_FLASH_ATTR cgiReadFlash(HttpdConnData *connData) {
-	int *pos=(int *)&connData->cgiData;
-	if (connData->conn==NULL) {
+	int *pos = (int *) &connData->cgiData;
+	if (connData->conn == NULL) {
 		//Connection aborted. Clean up.
 		return HTTPD_CGI_DONE;
 	}
 
-	if (*pos==0) {
+	if (*pos == 0) {
 		os_printf("Start flash download.\n");
 		httpdStartResponse(connData, 200);
 		httpdHeader(connData, "Content-Type", "application/bin");
 		httpdEndHeaders(connData);
-		*pos=0x40200000;
+		*pos = 0x40200000;
 		return HTTPD_CGI_MORE;
 	}
-	//Send 1K of flash per call. We will get called again if we haven't sent 512K yet.
-	espconn_sent(connData->conn, (uint8 *)(*pos), 1024);
-	*pos+=1024;
-	if (*pos>=0x40200000+(512*1024)) return HTTPD_CGI_DONE; else return HTTPD_CGI_MORE;
+//Send 1K of flash per call. We will get called again if we haven't sent 512K yet.
+	espconn_sent(connData->conn, (uint8 *) (*pos), 1024);
+	*pos += 1024;
+	if (*pos >= 0x40200000 + (512 * 1024))
+		return HTTPD_CGI_DONE;
+	else
+		return HTTPD_CGI_MORE;
 }
 
 int ICACHE_FLASH_ATTR cgiUploadEspfs(HttpdConnData *connData) {
-	if (connData->conn==NULL) {
+	if (connData->conn == NULL) {
 		//Connection aborted. Clean up.
 		return HTTPD_CGI_DONE;
 	}
@@ -143,26 +167,28 @@ int ICACHE_FLASH_ATTR cgiUploadEspfs(HttpdConnData *connData) {
 	int x;
 	int flashOff = ESPFS_POS;
 	int flashSize = ESPFS_SIZE;
-	
-	//If this is the first time, erase the flash sector
-	if (connData->post->received == 0){
+
+//If this is the first time, erase the flash sector
+	if (connData->post->received == 0) {
 		os_printf("Erasing flash at 0x%x...\n", flashOff);
 		// Which segment are we flashing?	
-		for (x=0; x<flashSize; x+=4096){
-			spi_flash_erase_sector((flashOff+x)/0x1000);
+		for (x = 0; x < flashSize; x += 4096) {
+			spi_flash_erase_sector((flashOff + x) / 0x1000);
 		}
 		os_printf("Done erasing.\n");
 	}
-	
-	// The source should be 4byte aligned, so go ahead an flash whatever we have
-	ret=spi_flash_write((flashOff + connData->post->received), (uint32 *)connData->post->buff, connData->post->buffLen);
-	os_printf("Flash return %d\n", ret);
-	
-	// Count bytes for data
-	connData->post->received += connData->post->buffSize;//connData->postBuff);
-	os_printf("Wrote %d bytes (%dB of %d)\n", connData->post->buffSize, connData->post->received, connData->post->len);//&connData->postBuff));
 
-	if (connData->post->received == connData->post->len){
+// The source should be 4byte aligned, so go ahead an flash whatever we have
+	ret = spi_flash_write((flashOff + connData->post->received),
+			(uint32 *) connData->post->buff, connData->post->buffLen);
+	os_printf("Flash return %d\n", ret);
+
+// Count bytes for data
+	connData->post->received += connData->post->buffSize; //connData->postBuff);
+	os_printf("Wrote %d bytes (%dB of %d)\n", connData->post->buffSize,
+			connData->post->received, connData->post->len); //&connData->postBuff));
+
+	if (connData->post->received == connData->post->len) {
 		httpdSend(connData, "Finished uploading", -1);
 		return HTTPD_CGI_DONE;
 	} else {

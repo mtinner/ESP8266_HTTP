@@ -40,6 +40,10 @@ void ICACHE_FLASH_ATTR setLed(int ena, int GPIO) {
 	}
 }
 
+uint32 ICACHE_FLASH_ATTR getLedStatus(int GPIO){
+	return GPIO_INPUT_GET(GPIO);
+}
+
 static void ICACHE_FLASH_ATTR resetBtnTimerCb(void *arg) {
 	static int resetCnt=0;
 	if (!GPIO_INPUT_GET(BTNGPIO)) {

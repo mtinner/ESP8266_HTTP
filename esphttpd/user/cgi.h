@@ -4,7 +4,8 @@
 #include "httpd.h"
 
 int cgiLed(HttpdConnData *connData);
-int myFuncLED(HttpdConnData *connData);
+int postLed(HttpdConnData *connData);
+int getLed(HttpdConnData *connData);
 int tplLed(HttpdConnData *connData, char *token, void **arg);
 int cgiReadFlash(HttpdConnData *connData);
 int tplCounter(HttpdConnData *connData, char *token, void **arg);
