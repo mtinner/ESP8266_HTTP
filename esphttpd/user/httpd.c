@@ -231,6 +231,19 @@ void ICACHE_FLASH_ATTR httpdStartResponse(HttpdConnData *conn, int code) {
 	httpdSend(conn, buff, l);
 }
 
+void ICACHE_FLASH_ATTR httpdJSONResponse(HttpdConnData *conn, char *data) {
+	char buff[128];
+	int l;
+	l = os_sprintf(buff,
+			"HTTP/1.0 %d OK\r\n"
+			"Server: Smarthome\r\n"
+			"Content-Type: application/json; charset=ISO-8859-1\r\n"
+			"Content-Length: %d\r\n"
+			"%s\r\n",
+			200,strlen(data),data);
+	httpdSend(conn, buff, l);
+}
+
 //Send a http header.
 void ICACHE_FLASH_ATTR httpdHeader(HttpdConnData *conn, const char *field,
 		const char *val) {
