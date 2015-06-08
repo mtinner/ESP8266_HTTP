@@ -91,21 +91,12 @@ int ICACHE_FLASH_ATTR getLed(HttpdConnData *connData) {
 		int size = os_sprintf(buffer,"{\"id\": %lu, \"status\": %d}",led,(unsigned long)ledStatus);
 		os_printf("{\"id\": %lu, \"status\": %d}",led,(unsigned long)ledStatus);
 		os_printf(buffer);
-	//	connData->cgiPrivData=buffer;
-	//	connData->cgiData=buffer;
-		//connData->priv->headPos=0;
-		//connData->priv->sendBuff=buffer;
-		//connData->priv->sendBuffLen=strlen(buffer);
+
 		httpdStartResponse(connData, 200);
 		httpdHeader(connData, "Content-Type", "application/json; charset=ISO-8859-1\r\n");
-		//httpdHeader(connData, "Content-Lenght", (char*)strlen(buffer));
+		httpdHeader(connData, "Content-Type", "application/json; charset=ISO-8859-1\r\n");
 		httpdEndHeaders(connData);
-
-
-
-
-		//httpdJSONResponse(connData, buffer);
-		//httpdSend(connData, buffer, size);
+		httpdSend(connData, buffer, size);
 
 	}
 
