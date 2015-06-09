@@ -53,10 +53,12 @@ void prepareToSetLed(HttpdConnData* connData) {
 	int status;
 	led = httpFindValueFromArg(connData->post->buff, "led");
 	status = httpFindValueFromArg(connData->post->buff, "status");
+	os_printf("LED: %d\n", led);
+	os_printf("Is set to status: %d\n", status);
 	if (led != -1 && status != -1) {
 		setLed(status, led);
 	}
-	httpdSend(connData, "ok", 2);
+	httpdSend(connData, "", 2);
 }
 
 //Cgi that turns the LED on or off according to the 'led' param in the POST data
@@ -93,7 +95,6 @@ int ICACHE_FLASH_ATTR getLed(HttpdConnData *connData) {
 		os_printf(buffer);
 
 		httpdStartResponse(connData, 200);
-		httpdHeader(connData, "Content-Type", "application/json; charset=ISO-8859-1\r\n");
 		httpdHeader(connData, "Content-Type", "application/json; charset=ISO-8859-1\r\n");
 		httpdEndHeaders(connData);
 		httpdSend(connData, buffer, size);
