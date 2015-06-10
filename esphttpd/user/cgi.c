@@ -51,7 +51,7 @@ void prepareToSetLed(HttpdConnData* connData) {
 	//POST
 	int led;
 	int status;
-	led = httpFindValueFromArg(connData->post->buff, "led");
+	led = httpFindValueFromArg(connData->post->buff, "id");
 	status = httpFindValueFromArg(connData->post->buff, "status");
 	os_printf("LED: %d\n", led);
 	os_printf("Is set to status: %d\n", status);
