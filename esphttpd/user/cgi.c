@@ -26,6 +26,9 @@
 
 //cause I can't be bothered to write an ioGetLed()
 static char currLedState = 0;
+const char ip[] = "10.0.0.40";
+const int inputPorts[] = { 0 };
+const int outputPorts[] = { 2 };
 
 //Cgi that turns the LED on or off according to the 'led' param in the POST data
 int ICACHE_FLASH_ATTR cgiLed(HttpdConnData *connData) {
@@ -51,7 +54,7 @@ void prepareToSetLed(HttpdConnData* connData) {
 	//POST
 	int led;
 	int status;
-	led = httpFindValueFromArg(connData->post->buff, "id");
+	led = httpFindValueFromArg(connData->post->buff, "internalPort");
 	status = httpFindValueFromArg(connData->post->buff, "status");
 	os_printf("LED: %d\n", led);
 	os_printf("Is set to status: %d\n", status);
@@ -86,22 +89,57 @@ int ICACHE_FLASH_ATTR getLed(HttpdConnData *connData) {
 	if (connData->requestType == 1) { //POST
 		int led;
 		os_printf("getled\n");
-		led=httpFindValueFromArg(connData->url, "led");
+		led = httpFindValueFromArg(connData->url, "led");
 		uint32 ledStatus = getLedStatus(led);
-		char buffer [50];
+		char buffer[50];
 
-		int size = os_sprintf(buffer,"{\"id\": %lu, \"status\": %d}",led,(unsigned long)ledStatus);
-		os_printf("{\"id\": %lu, \"status\": %d}",led,(unsigned long)ledStatus);
+		int size = os_sprintf(buffer, "{\"id\": %lu, \"status\": %d}", led,
+				(unsigned long) ledStatus);
+		os_printf("{\"id\": %lu, \"status\": %d}", led,
+				(unsigned long) ledStatus);
 		os_printf(buffer);
 
 		httpdStartResponse(connData, 200);
-		httpdHeader(connData, "Content-Type", "application/json; charset=ISO-8859-1\r\n");
+		httpdHeader(connData, "Content-Type",
+				"application/json; charset=ISO-8859-1\r\n");
 		httpdEndHeaders(connData);
 		httpdSend(connData, buffer, size);
 
 	}
 
+	return HTTPD_CGI_DONE;
+}
 
+int ICACHE_FLASH_ATTR getStationInputs(HttpdConnData *connData) {
+	if (connData->conn == NULL||connData->requestType != 1) {
+		return HTTPD_CGI_DONE;
+	}
+
+	char buffer[1024];
+	os_sprintf(buffer, "{\"ip\": \"%s\"", ip);
+	os_sprintf(buffer, "%s ,\"floor\": %d",buffer, 2);
+
+	if((sizeof(inputPorts)/sizeof(int))>0){
+		os_sprintf(buffer, "%s ,\"lampList\": [",buffer );
+	}
+
+	for (int i = 0; i < (sizeof(inputPorts)/sizeof(int)) ; i++) {
+		if(i!=0){os_sprintf(buffer, "%s ,",buffer);}
+		os_sprintf(buffer, "%s {\"internalId\": %d ",buffer, i);
+		os_sprintf(buffer, "%s ,\"input\": {\"internalPort\": %d , \"status\": %d}",buffer, inputPorts[i], getLedStatus(i));
+		os_sprintf(buffer, "%s } ",buffer, i);
+	}
+
+	if((sizeof(inputPorts)/sizeof(int))>0){
+			os_sprintf(buffer, "%s ]",buffer );
+		}
+	int size = os_sprintf(buffer, "%s}", buffer);
+
+	httpdStartResponse(connData, 200);
+	httpdHeader(connData, "Content-Type",
+			"application/json; charset=ISO-8859-1\r\n");
+	httpdEndHeaders(connData);
+	httpdSend(connData, buffer, size);
 	return HTTPD_CGI_DONE;
 }
 

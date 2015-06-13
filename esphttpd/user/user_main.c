@@ -38,7 +38,8 @@ HttpdBuiltInUrl builtInUrls[]={
 	{"/led.tpl", cgiEspFsTemplate, tplLed},
 	{"/index.tpl", cgiEspFsTemplate, tplCounter},
 	{"/led.cgi", cgiLed, NULL},
-	{"/led", postLed, NULL},
+	{"/output", postLed, ""},
+	{"/inputs", getStationInputs, NULL},
 	{"/led/*", getLed, NULL},
 	{"/updateweb.cgi", cgiUploadEspfs, NULL},
 

@@ -6,6 +6,7 @@
 int cgiLed(HttpdConnData *connData);
 int postLed(HttpdConnData *connData);
 int getLed(HttpdConnData *connData);
+int getStationInputs(HttpdConnData *connData);
 int tplLed(HttpdConnData *connData, char *token, void **arg);
 int cgiReadFlash(HttpdConnData *connData);
 int tplCounter(HttpdConnData *connData, char *token, void **arg);
