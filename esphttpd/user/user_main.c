@@ -33,15 +33,18 @@ general ones. Authorization things (like authBasic) act as a 'barrier' and
 should be placed above the URLs they protect.
 */
 HttpdBuiltInUrl builtInUrls[]={
-	{"/", cgiRedirect, "/index.tpl"},
-	{"/flash.bin", cgiReadFlash, NULL},
-	{"/led.tpl", cgiEspFsTemplate, tplLed},
-	{"/index.tpl", cgiEspFsTemplate, tplCounter},
-	{"/led.cgi", cgiLed, NULL},
+	//{"/", cgiRedirect, "/index.tpl"},
+	//{"/flash.bin", cgiReadFlash, NULL},
+	//{"/led.tpl", cgiEspFsTemplate, tplLed},
+	//{"/index.tpl", cgiEspFsTemplate, tplCounter},
+	//{"/led.cgi", cgiLed, NULL},
 	{"/output", postLed, ""},
 	{"/inputs", getStationInputs, NULL},
-	{"/led/*", getLed, NULL},
-	{"/updateweb.cgi", cgiUploadEspfs, NULL},
+	//step2
+	//{"/config", setConfig, NULL},
+	//not needed
+	//{"/led/*", getLed, NULL},
+	//{"/updateweb.cgi", cgiUploadEspfs, NULL},
 
 
 	{"*", cgiEspFsHook, NULL}, //Catch-all cgi function for the filesystem

@@ -30,6 +30,33 @@ const char ip[] = "10.0.0.40";
 const int inputPorts[] = { 0 };
 const int outputPorts[] = { 2 };
 
+//step2
+/*struct Station {
+	char* ip;
+	int32_t floor;
+	Lamp *lampList[4];
+	int32_t numberOfLamp;
+};
+
+struct Lamp {
+	int32_t internalId;
+	ESPInput *input;
+	ESPOutput *output;
+};
+
+struct ESPInput {
+	int32_t internalPort;
+	int32_t status;
+};
+
+struct ESPOutput {
+	int32_t internalPort;
+	int32_t status;
+};
+
+Station station;*/
+
+
 //Cgi that turns the LED on or off according to the 'led' param in the POST data
 int ICACHE_FLASH_ATTR cgiLed(HttpdConnData *connData) {
 	int len;
@@ -64,6 +91,72 @@ void prepareToSetLed(HttpdConnData* connData) {
 	httpdSend(connData, "", 2);
 }
 
+//step2
+/*
+int ICACHE_FLASH_ATTR setConfig(HttpdConnData *connData) {
+	if (connData->conn == NULL) {
+		//Connection aborted. Clean up.
+		return HTTPD_CGI_DONE;
+	}
+
+	if (connData->requestType == 2) { //POST
+		//os_printf("Config: %s\n", connData->post->buff);
+		//set floor
+		station.floor = httpFindValueFromArg(connData->post->buff, "floor");
+		char * jsonString = strstr(connData->post->buff, "floor");
+		os_printf("JsonString begin: %s\n", jsonString);
+		os_printf("floor: %d\n", station.floor);
+		station.ip = "";
+		//set IP
+		station.ip = httpFindStringFromArg(jsonString, "ip");
+		//cut string befor IP
+		jsonString = strstr(jsonString, "ip");
+		os_printf("IP: %s\n", station.ip);
+		Lamp lampList[4] = { };
+		bool check = true;
+		for (int i = 0; strstr(jsonString, "internalId") && check; i++) {
+			ESPInput input;
+			ESPOutput output;
+			lampList[i].input = &input;
+			lampList[i].output = &output;
+			station.lampList[i] = &lampList[i];
+			//looking for internal port (input)
+			//start set Input
+			input.internalPort = httpFindValueFromArg(jsonString,
+					"internalPort");
+			jsonString = strstr(jsonString, "internalPort");
+			os_printf("status of internalPort: %d\n",
+					station.lampList[i]->input->internalPort);
+			//set status (input)
+			input.status = httpFindValueFromArg(jsonString, "status");
+			jsonString = strstr(jsonString, "status");
+			os_printf("Status input: %d\n", station.lampList[i]->input->status);
+			//set InternalID
+			lampList[i].internalId = httpFindValueFromArg(jsonString,
+					"internalId");
+			jsonString = strstr(jsonString, "internalId");
+			os_printf("internalId : %d\n", lampList[i].internalId);
+			//looking for internal port (output)
+			//start set Output
+			output.internalPort = httpFindValueFromArg(jsonString,
+					"internalPort");
+			jsonString = strstr(jsonString, "internalPort");
+			os_printf("status of internalPort: %d\n",
+					station.lampList[i]->output->internalPort);
+			//set status (output)
+			output.status = httpFindValueFromArg(jsonString, "status");
+			jsonString = strstr(jsonString, "status");
+			os_printf("Status output: %d\n",
+					station.lampList[i]->output->status);
+
+			os_printf("JsonString middle: %s\n", jsonString);
+			station.numberOfLamp=i;
+		}
+
+	}
+	return HTTPD_CGI_DONE;
+}*/
+
 //Cgi that turns the LED on or off according to the 'led' param in the POST data
 int ICACHE_FLASH_ATTR postLed(HttpdConnData *connData) {
 	if (connData->conn == NULL) {
@@ -77,8 +170,9 @@ int ICACHE_FLASH_ATTR postLed(HttpdConnData *connData) {
 	return HTTPD_CGI_DONE;
 }
 
+//not needed
+/*
 int ICACHE_FLASH_ATTR getLed(HttpdConnData *connData) {
-
 	char buff[1024];
 
 	if (connData->conn == NULL) {
@@ -108,31 +202,36 @@ int ICACHE_FLASH_ATTR getLed(HttpdConnData *connData) {
 	}
 
 	return HTTPD_CGI_DONE;
-}
+}*/
 
 int ICACHE_FLASH_ATTR getStationInputs(HttpdConnData *connData) {
-	if (connData->conn == NULL||connData->requestType != 1) {
+
+	if (connData->conn == NULL || connData->requestType != 1) {
 		return HTTPD_CGI_DONE;
 	}
 
 	char buffer[1024];
 	os_sprintf(buffer, "{\"ip\": \"%s\"", ip);
-	os_sprintf(buffer, "%s ,\"floor\": %d",buffer, 2);
+	os_sprintf(buffer, "%s ,\"floor\": %d", buffer, 2);
 
-	if((sizeof(inputPorts)/sizeof(int))>0){
-		os_sprintf(buffer, "%s ,\"lampList\": [",buffer );
+	if ((sizeof(inputPorts) / sizeof(int)) > 0) {
+		os_sprintf(buffer, "%s ,\"lampList\": [", buffer);
 	}
 
-	for (int i = 0; i < (sizeof(inputPorts)/sizeof(int)) ; i++) {
-		if(i!=0){os_sprintf(buffer, "%s ,",buffer);}
-		os_sprintf(buffer, "%s {\"internalId\": %d ",buffer, i);
-		os_sprintf(buffer, "%s ,\"input\": {\"internalPort\": %d , \"status\": %d}",buffer, inputPorts[i], getLedStatus(i));
-		os_sprintf(buffer, "%s } ",buffer, i);
-	}
-
-	if((sizeof(inputPorts)/sizeof(int))>0){
-			os_sprintf(buffer, "%s ]",buffer );
+	for (int i = 0; i < (sizeof(inputPorts) / sizeof(int)); i++) {
+		if (i != 0) {
+			os_sprintf(buffer, "%s ,", buffer);
 		}
+		os_sprintf(buffer, "%s {\"internalId\": %d ", buffer, i);
+		os_sprintf(buffer,
+				"%s ,\"input\": {\"internalPort\": %d , \"status\": %d}",
+				buffer, inputPorts[i], getLedStatus(i));
+		os_sprintf(buffer, "%s } ", buffer, i);
+	}
+
+	if ((sizeof(inputPorts) / sizeof(int)) > 0) {
+		os_sprintf(buffer, "%s ]", buffer);
+	}
 	int size = os_sprintf(buffer, "%s}", buffer);
 
 	httpdStartResponse(connData, 200);

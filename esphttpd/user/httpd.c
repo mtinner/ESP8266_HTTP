@@ -25,7 +25,6 @@
 #include "io.h"
 #include "espfs.h"
 
-
 //Max length of request head
 #define MAX_HEAD_LEN 1024
 //Max amount of connections
@@ -177,17 +176,35 @@ int ICACHE_FLASH_ATTR httpdFindArg(char *line, char *arg, char *buff,
 
 int ICACHE_FLASH_ATTR httpFindValueFromArg(char *line, char *arg) {
 	if (strstr(line, arg)) {
-		char* occurrence = strstr(line, arg),*p=occurrence;
+		char* occurrence = strstr(line, arg), *p = occurrence;
 		while (*p) {
-		        if (isdigit(*p)) {
-		            int val = strtol(p, &p, 10);
-		            return val;
-		        } else {
-		            p++;
-		        }
-		    }
+			if (isdigit(*p)) {
+				int val = strtol(p, &p, 10);
+				return val;
+			} else {
+				p++;
+			}
+		}
 	}
 	return -1;
+}
+
+char* ICACHE_FLASH_ATTR httpFindStringFromArg(char *line, char *arg) {
+	static char buffer[64];
+	if (strstr(line, arg)) {
+		char* occurrence = strstr(line, arg), *p = occurrence;
+		p += strlen(arg); //jump over argname
+		p += 3; //jump over ":"
+		while (*p) {
+			if (*p == '"') { // 34--> " in ascii
+				return buffer;
+			} else {
+				os_sprintf(buffer, "%s%c", buffer, *p);
+				p++;
+			}
+		}
+	}
+	return buffer;
 }
 
 //Get the value of a certain header in the HTTP client head
@@ -234,13 +251,11 @@ void ICACHE_FLASH_ATTR httpdStartResponse(HttpdConnData *conn, int code) {
 void ICACHE_FLASH_ATTR httpdJSONResponse(HttpdConnData *conn, char *data) {
 	char buff[128];
 	int l;
-	l = os_sprintf(buff,
-			"HTTP/1.0 %d OK\r\n"
+	l = os_sprintf(buff, "HTTP/1.0 %d OK\r\n"
 			"Server: Smarthome\r\n"
 			"Content-Type: application/json; charset=ISO-8859-1\r\n"
 			"Content-Length: %d\r\n"
-			"%s\r\n",
-			200,strlen(data),data);
+			"%s\r\n", 200, strlen(data), data);
 	httpdSend(conn, buff, l);
 }
 
@@ -357,10 +372,9 @@ static void ICACHE_FLASH_ATTR httpdProcessRequest(HttpdConnData *conn) {
 			if (os_strcmp(builtInUrls[i].url, conn->url) == 0)
 				match = 1;
 			//See if there's a wildcard match
-			if (builtInUrls[i].url[os_strlen(builtInUrls[i].url) - 1] == '*'
-					&&
-					os_strncmp(builtInUrls[i].url, conn->url,
-							os_strlen(builtInUrls[i].url) - 1) == 0)
+			if (builtInUrls[i].url[os_strlen(builtInUrls[i].url) - 1] == '*' &&
+			os_strncmp(builtInUrls[i].url, conn->url,
+			os_strlen(builtInUrls[i].url) - 1) == 0)
 				match = 1;
 			if (match) {
 				os_printf("Is url index %d\n", i);
